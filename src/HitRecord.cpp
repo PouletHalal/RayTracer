@@ -9,14 +9,13 @@
 
 namespace RayTracer {
 
-HitRecord::HitRecord(const double t, const Ray &ray, const IShape &shape) {
-    Math::Vector3D outwardNormal = shape.normal(ray.at(t));
-
+HitRecord::HitRecord(const double t, const Ray &ray, const IShape &shape,
+                     const Math::Vector3D &normal) {
     this->missed = false;
     this->t = t;
     this->p = ray.at(t);
-    this->frontFace = ray.dir.dot(shape.normal(this->p)) < 0;
-    this->normal = this->frontFace ? outwardNormal : -outwardNormal;
+    this->frontFace = ray.dir.dot(normal) < 0;
+    this->normal = this->frontFace ? normal : -normal;
 }
 
 }  // namespace RayTracer

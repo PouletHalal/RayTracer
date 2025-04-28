@@ -8,13 +8,13 @@
 #ifndef HITRECORD_HPP
 #define HITRECORD_HPP
 
-#include "Ray.hpp"
 #include "IShape.hpp"
+#include "Ray.hpp"
 #include "Vector.hpp"
 
 namespace RayTracer {
 
-class IShape; // this fix cross include, trust the process
+class IShape;  // this fix cross include, trust the process
 
 class HitRecord {
    public:
@@ -25,7 +25,8 @@ class HitRecord {
     bool missed = true;
 
     HitRecord() = default;
-    HitRecord(const double t, const Ray &ray, const IShape &shape);
+    HitRecord(const double t, const Ray &ray, const IShape &shape,
+              const Math::Vector3D &normal);
 };
 
 }  // namespace RayTracer

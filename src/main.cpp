@@ -10,10 +10,11 @@
 #include <SFML/Window/Keyboard.hpp>
 
 #include "Camera.hpp"
-#include "Sphere.hpp"
-#include "Vector.hpp"
-#include "Utils.hpp"
 #include "HitRecord.hpp"
+#include "Sphere.hpp"
+#include "Utils.hpp"
+#include "Vector.hpp"
+#include "Scene.hpp"
 
 #define CAM_SPEED 0.03
 
@@ -41,29 +42,39 @@ Math::Vector3D getSkyColor(const RayTracer::Ray &r) {
 uint8_t *generateImage(int width, int height, RayTracer::Camera &cam) {
     uint8_t *array =
         static_cast<uint8_t *>(malloc(sizeof(uint8_t) * (width * height * 4)));
-    RayTracer::Sphere s(Math::Vector3D(0, 0, -2), 0.5);
     double screenWidth = width;
     double screenHeight = height;
     Math::Vector3D vec;
+    Math::Vector3D lightPos = {0, -2, -1};
+    RayTracer::Scene scene;
+    RayTracer::HitRecord hitRecord;
 
+    scene.addShape(std::make_shared<RayTracer::Sphere>(Math::Vector3D(0, 0, -2), 0.5));
+    scene.addShape(std::make_shared<RayTracer::Sphere>(Math::Vector3D(0, 0, -3), 0.5));
+    scene.addShape(std::make_shared<RayTracer::Sphere>(Math::Vector3D(0, 0, -4), 0.5));
+    scene.addShape(std::make_shared<RayTracer::Sphere>(Math::Vector3D(0, 0, -5), 0.5));
     for (double y = 0; y < screenHeight; y++) {
         for (double x = 0; x < screenWidth; x++) {
             double u = x / screenWidth;
             double v = y / screenHeight;
             RayTracer::Ray r = cam.ray(u, v);
-            RayTracer::HitRecord hitRecord = s.hit(r);
-            
+            hitRecord = scene.hit(r);
+
             vec = getSkyColor(r);
             setPixelColor(array, y * width + x,
                           {static_cast<unsigned char>(vec.x * 255),
                            static_cast<unsigned char>(vec.y * 255),
                            static_cast<unsigned char>(vec.z * 255), 255});
+            Math::Vector3D toLight = lightPos - hitRecord.p;
             if (!hitRecord.missed) {
-                vec = (hitRecord.normal + 1.0) / 2.0;
-                setPixelColor(array, y * width + x,
-                              {static_cast<unsigned char>(vec.x * 255),
-                               static_cast<unsigned char>(vec.y * 255),
-                               static_cast<unsigned char>(vec.z * 255), 255});
+                float lightEfficiency = hitRecord.normal.dot(toLight.normalized());
+
+                setPixelColor(
+                    array, y * width + x,
+                    {static_cast<unsigned char>(std::max(0.0f, lightEfficiency * 255)),
+                     static_cast<unsigned char>(std::max(0.0f, lightEfficiency * 255)),
+                     static_cast<unsigned char>(std::max(0.0f, lightEfficiency * 255)),
+                     255});
             } else {
                 // setPixelColor(array, y * width + x, {0, 0, 0, 255});
             }
@@ -81,8 +92,8 @@ int main() {
     sf::RenderWindow window(sf::VideoMode(screenWidth, screenHeight),
                             "SFML window");
 
-    const unsigned int W = 800;
-    const unsigned int H = 800;
+    const unsigned int W = 80;
+    const unsigned int H = 80;
 
     sf::Uint8 *pixels;
     sf::Texture texture;

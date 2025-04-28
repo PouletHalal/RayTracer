@@ -11,16 +11,21 @@
 #include <list>
 
 #include "HitRecord.hpp"
+#include "IShape.hpp"
 
 // TODO : a Scene class
 
 namespace RayTracer {
 
-class Scene {
+class Scene : public IShape {
+private:
+    std::list<std::shared_ptr<IShape>> shapeList;
+
    public:
-    std::list<HitRecord> sendRay() { return std::list<HitRecord>(); };
+    HitRecord hit(const Ray &ray) const override;
+    void addShape(const std::shared_ptr<IShape> &shape);
 };
 
-}  // namespace Raytracer
+}  // namespace RayTracer
 
 #endif

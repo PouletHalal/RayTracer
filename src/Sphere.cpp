@@ -11,48 +11,62 @@
 
 #include "Error.hpp"
 
+#define EPSILON 1e-12
+
 namespace RayTracer {
 
-bool solveQuadratic(const double &a, const double &b, const double &c,
-                    double &x0, double &x1) {
-    double discr = b * b - 4 * a * c;
-    double q;
+// bool solveQuadratic(const double a, const double b, const double c, double &x0,
+//                     double &x1) {
+//     double discr = b * b - 4.0 * a * c;
+//     if (discr < 0.0) return false;
 
-    if (discr < 0) return false;
-    if (discr == 0) {
-        x0 = x1 = -0.5 * b / a;
-    } else {
-        if (b > 0)
-            q = -0.5 * (b + std::sqrt(discr));
-        else
-            q = -0.5 * (b - std::sqrt(discr));
-        x0 = q / a;
-        x1 = c / q;
-    }
-    if (x0 > x1) std::swap(x0, x1);
-    return true;
-}
+//     if (discr == 0.0) {
+//         x0 = x1 = -0.5 * b / a;
+//     } else {
+//         double sqrtDiscr = std::sqrt(discr);
+//         double q = (b > 0.0) ? -0.5 * (b + sqrtDiscr) : -0.5 * (b - sqrtDiscr);
+//         x0 = q / a;
+//         x1 = c / q;
+//         if (x0 > x1) std::swap(x0, x1);
+//     }
+//     return true;
+// }
 
-// TODO : maybe change it to return a boolean, and pass hitRecord as argument
+// HitRecord Sphere::hit(const Ray &ray) const {
+//     Math::Vector3D L = ray.pos - this->pos;
+//     double a = ray.dir.dot(ray.dir);
+//     double b = 2.0 * ray.dir.dot(L);
+//     double c = L.dot(L) - radius * radius;
+//     double t0;
+//     double t1;
+
+//     if (!solveQuadratic(a, b, c, t0, t1)) return HitRecord();
+
+//     if (t0 < 0.0) {
+//         t0 = t1;
+//         if (t0 < 0.0) return HitRecord();
+//     }
+
+//     return HitRecord(t0, ray, *this, (ray.at(t0) - this->pos) / this->radius);
+// }
+
 HitRecord Sphere::hit(const Ray &ray) const {
-    double t0;
-    double t1;
     Math::Vector3D L = ray.pos - this->pos;
     double a = ray.dir.dot(ray.dir);
-    double b = 2 * ray.dir.dot(L);
+    double b = ray.dir.dot(L);
     double c = L.dot(L) - radius * radius;
+    double discr = b * b - a * c;
 
-    if (!solveQuadratic(a, b, c, t0, t1)) return HitRecord();
-    if (t0 > t1) std::swap(t0, t1);
-    if (t0 < 0) {
-        t0 = t1;
-        if (t0 < 0) return HitRecord();
-    }
-    return HitRecord(t0, ray, *this);
-}
+    if (discr < EPSILON) return HitRecord();
 
-Math::Vector3D Sphere::normal(const Math::Vector3D &hitPoint) const {
-    return (hitPoint - this->pos) / this->radius;
+    double sqrtDiscr = std::sqrt(discr);
+    double t0 = (-b - sqrtDiscr) / a;
+    double t1 = (-b + sqrtDiscr) / a;
+    double t = (t0 > 0.0) ? t0 : t1;
+
+    if (t < 0.0) return HitRecord();
+
+    return HitRecord(t, ray, *this, (ray.at(t) - this->pos) / this->radius);
 }
 
 std::ostream &operator<<(std::ostream &out, const Sphere &sphere) {

@@ -13,6 +13,7 @@ SRC =		src/main.cpp			\
 			src/Camera.cpp			\
 			src/Ray.cpp				\
 			src/HitRecord.cpp		\
+			src/Scene.cpp			\
 			src/Rectangle.cpp
 
 OBJ =		$(SRC:.cpp=.o)
