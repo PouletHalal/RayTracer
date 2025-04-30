@@ -10,8 +10,7 @@
 #include <cmath>
 
 #include "Error.hpp"
-
-#define EPSILON 1e-12
+#include "Utils.hpp"
 
 namespace RayTracer {
 

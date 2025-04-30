@@ -13,7 +13,7 @@ namespace RayTracer {
 
 HitRecord RayTracer::Scene::hit(const Ray &ray) const {
     HitRecord closest;
-    float closestDistance = INFINITY;
+    float closestDistance = DOUBLE_INFINITY;
 
     for (const std::shared_ptr<RayTracer::IShape> &shape : this->shapeList) {
         const HitRecord hit = shape->hit(ray);

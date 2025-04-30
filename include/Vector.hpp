@@ -10,6 +10,8 @@
 
 #include <iostream>
 
+#include "Utils.hpp"
+
 namespace Math {
 
 class Vector3D {
@@ -21,6 +23,7 @@ class Vector3D {
     Vector3D() : x(0), y(0), z(0) {};
     Vector3D(double x, double y, double z) : x(x), y(y), z(z) {};
     double length() const;
+    double lengthSquared() const;
     double dot(const Vector3D &other) const;
     void normalize();
     Vector3D normalized() const;
@@ -47,6 +50,37 @@ class Vector3D {
     Vector3D &operator-=(const double &other);
     Vector3D &operator*=(const double &other);
     Vector3D &operator/=(const double &other);
+
+    static Vector3D random() {
+        return Vector3D(random_double(), random_double(), random_double());
+    }
+
+    static Vector3D random(double min, double max) {
+        return Vector3D(random_double(min, max), random_double(min, max),
+                        random_double(min, max));
+    }
+
+    static inline Vector3D random_unit_vector() {
+        while (true) {
+            Vector3D p = Vector3D::random(-1, 1);
+            double lensq = p.lengthSquared();
+
+            if (1e-160 < lensq &&
+                lensq <= 1)  // deal with small sized vector, because they
+                             // lenght squared will be so small it will cause
+                             // error or rounding to infinity
+                return p / sqrt(lensq);
+        }
+    }
+
+    static inline Vector3D random_on_hemisphere(const Vector3D &normal) {
+        Vector3D on_unit_sphere = random_unit_vector();
+
+        if (on_unit_sphere.dot(normal) > 0.0)
+            return on_unit_sphere;
+        else
+            return -on_unit_sphere;
+    }
 };
 
 std::ostream &operator<<(std::ostream &out, const Vector3D &vec);

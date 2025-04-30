@@ -11,28 +11,47 @@
 
 #include "Camera.hpp"
 #include "HitRecord.hpp"
+#include "Scene.hpp"
 #include "Sphere.hpp"
 #include "Utils.hpp"
 #include "Vector.hpp"
-#include "Scene.hpp"
 
 #define CAM_SPEED 0.03
+#define LIGHT_REFLEXION 0.6
 
-struct rgba {
+struct rgb {
     uint8_t r;
     uint8_t g;
     uint8_t b;
-    uint8_t a;
 };
 
-void setPixelColor(uint8_t *array, int index, rgba color) {
+void setPixelColor(uint8_t *array, int index, rgb color) {
     array[index * 4] = color.r;
     array[index * 4 + 1] = color.g;
     array[index * 4 + 2] = color.b;
-    array[index * 4 + 3] = color.a;
+    array[index * 4 + 3] = 255;
 }
 
 Math::Vector3D getSkyColor(const RayTracer::Ray &r) {
+    Math::Vector3D unit_direction = r.dir.normalized();
+    double a = 0.5 * (unit_direction.y + 1.0);
+    return Math::Vector3D(0.9, 0.9, 0.9) * (1.0 - a) +
+           Math::Vector3D(0.3, 0.5, 1.0) * a;
+}
+
+Math::Vector3D ray_color(const RayTracer::Ray &r, int depth,
+                         const RayTracer::Scene &scene) {
+    if (depth <= 0) return Math::Vector3D(0, 0, 0);
+
+    RayTracer::HitRecord rec = scene.hit(r);
+
+    if (!rec.missed) {
+        Math::Vector3D direction =
+            Math::Vector3D::random_on_hemisphere(rec.normal);
+        return ray_color(RayTracer::Ray(rec.p + rec.normal * EPSILON, direction), depth - 1, scene) *
+               LIGHT_REFLEXION;
+    }
+
     Math::Vector3D unit_direction = r.dir.normalized();
     double a = 0.5 * (unit_direction.y + 1.0);
     return Math::Vector3D(0.9, 0.9, 0.9) * (1.0 - a) +
@@ -49,34 +68,45 @@ uint8_t *generateImage(int width, int height, RayTracer::Camera &cam) {
     RayTracer::Scene scene;
     RayTracer::HitRecord hitRecord;
 
-    scene.addShape(std::make_shared<RayTracer::Sphere>(Math::Vector3D(0, 0, -2), 0.5));
-    scene.addShape(std::make_shared<RayTracer::Sphere>(Math::Vector3D(0, 0, -3), 0.5));
-    scene.addShape(std::make_shared<RayTracer::Sphere>(Math::Vector3D(0, 0, -4), 0.5));
-    scene.addShape(std::make_shared<RayTracer::Sphere>(Math::Vector3D(0, 0, -5), 0.5));
+    scene.addShape(
+        std::make_shared<RayTracer::Sphere>(Math::Vector3D(0, 0, -2), 0.5));
+    scene.addShape(
+        std::make_shared<RayTracer::Sphere>(Math::Vector3D(0, 0, -3), 0.5));
+    scene.addShape(
+        std::make_shared<RayTracer::Sphere>(Math::Vector3D(0, 0, -4), 0.5));
+    scene.addShape(
+        std::make_shared<RayTracer::Sphere>(Math::Vector3D(0, 0, -5), 0.5));
     for (double y = 0; y < screenHeight; y++) {
         for (double x = 0; x < screenWidth; x++) {
             double u = x / screenWidth;
             double v = y / screenHeight;
             RayTracer::Ray r = cam.ray(u, v);
-            hitRecord = scene.hit(r);
 
-            vec = getSkyColor(r);
+            hitRecord = scene.hit(r);
+            vec = ray_color(r, 2, scene);
             setPixelColor(array, y * width + x,
                           {static_cast<unsigned char>(vec.x * 255),
                            static_cast<unsigned char>(vec.y * 255),
-                           static_cast<unsigned char>(vec.z * 255), 255});
-            Math::Vector3D toLight = lightPos - hitRecord.p;
-            if (!hitRecord.missed) {
-                float lightEfficiency = hitRecord.normal.dot(toLight.normalized());
+                           static_cast<unsigned char>(vec.z * 255)});
 
-                setPixelColor(
-                    array, y * width + x,
-                    {static_cast<unsigned char>(std::max(0.0f, lightEfficiency * 255)),
-                     static_cast<unsigned char>(std::max(0.0f, lightEfficiency * 255)),
-                     static_cast<unsigned char>(std::max(0.0f, lightEfficiency * 255)),
-                     255});
-            } else {
-                // setPixelColor(array, y * width + x, {0, 0, 0, 255});
+            Math::Vector3D toLight = lightPos - hitRecord.p;
+
+            if (!hitRecord.missed) {
+                float lightEfficiency =
+                    hitRecord.normal.dot(toLight.normalized());
+                RayTracer::HitRecord lightHitRecord = scene.hit(RayTracer::Ray(
+                    hitRecord.p + hitRecord.normal * EPSILON, toLight));
+
+                // if (lightHitRecord.missed)
+                //     setPixelColor(array, y * width + x,
+                //                   {static_cast<unsigned char>(
+                //                        std::max(0.0f, lightEfficiency * 255)),
+                //                    static_cast<unsigned char>(
+                //                        std::max(0.0f, lightEfficiency * 255)),
+                //                    static_cast<unsigned char>(
+                //                        std::max(0.0f, lightEfficiency * 255))});
+                // else
+                //     setPixelColor(array, y * width + x, {0, 0, 0});
             }
         }
     }
