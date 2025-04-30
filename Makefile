@@ -14,7 +14,8 @@ SRC =		src/main.cpp			\
 			src/Ray.cpp				\
 			src/HitRecord.cpp		\
 			src/Scene.cpp			\
-			src/Rectangle.cpp
+			src/Rectangle.cpp		\
+			src/Plane.cpp			\
 
 OBJ =		$(SRC:.cpp=.o)
 

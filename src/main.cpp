@@ -11,6 +11,7 @@
 
 #include "Camera.hpp"
 #include "HitRecord.hpp"
+#include "Plane.hpp"
 #include "Scene.hpp"
 #include "Sphere.hpp"
 #include "Utils.hpp"
@@ -48,7 +49,9 @@ Math::Vector3D ray_color(const RayTracer::Ray &r, int depth,
     if (!rec.missed) {
         Math::Vector3D direction =
             Math::Vector3D::random_on_hemisphere(rec.normal);
-        return ray_color(RayTracer::Ray(rec.p + rec.normal * EPSILON, direction), depth - 1, scene) *
+        return ray_color(
+                   RayTracer::Ray(rec.p + rec.normal * EPSILON, direction),
+                   depth - 1, scene) *
                LIGHT_REFLEXION;
     }
 
@@ -76,6 +79,8 @@ uint8_t *generateImage(int width, int height, RayTracer::Camera &cam) {
         std::make_shared<RayTracer::Sphere>(Math::Vector3D(0, 0, -4), 0.5));
     scene.addShape(
         std::make_shared<RayTracer::Sphere>(Math::Vector3D(0, 0, -5), 0.5));
+    scene.addShape(std::make_shared<RayTracer::Plane>(Math::Vector3D(0, 0, -3.5),
+                                                      Math::Vector3D(0, 0, -1)));
     for (double y = 0; y < screenHeight; y++) {
         for (double x = 0; x < screenWidth; x++) {
             double u = x / screenWidth;
@@ -100,11 +105,14 @@ uint8_t *generateImage(int width, int height, RayTracer::Camera &cam) {
                 // if (lightHitRecord.missed)
                 //     setPixelColor(array, y * width + x,
                 //                   {static_cast<unsigned char>(
-                //                        std::max(0.0f, lightEfficiency * 255)),
+                //                        std::max(0.0f, lightEfficiency *
+                //                        255)),
                 //                    static_cast<unsigned char>(
-                //                        std::max(0.0f, lightEfficiency * 255)),
+                //                        std::max(0.0f, lightEfficiency *
+                //                        255)),
                 //                    static_cast<unsigned char>(
-                //                        std::max(0.0f, lightEfficiency * 255))});
+                //                        std::max(0.0f, lightEfficiency *
+                //                        255))});
                 // else
                 //     setPixelColor(array, y * width + x, {0, 0, 0});
             }
