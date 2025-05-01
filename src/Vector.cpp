@@ -27,6 +27,12 @@ void Vector3D::normalize() {
     *this = this->normalized();
 }
 
+Vector3D Vector3D::cross(const Vector3D &other) const {
+    return Vector3D(this->y * other.z - this->z * other.y,
+                    this->z * other.x - this->x * other.z,
+                    this->x * other.y - this->y * other.x);
+}
+
 Vector3D Vector3D::normalized() const {
     return *this / this->length();
 }
