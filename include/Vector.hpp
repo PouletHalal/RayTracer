@@ -25,6 +25,7 @@ class Vector3D {
     double length() const;
     double lengthSquared() const;
     double dot(const Vector3D &other) const;
+    Vector3D cross(const Vector3D &other) const;
     void normalize();
     Vector3D normalized() const;
     void rotateX(double angle);
