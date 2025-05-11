@@ -15,7 +15,9 @@ HitRecord Plane::hit(const Ray &ray) const {
         Math::Vector3D p0l0 = pos - ray.pos;
         double t = p0l0.dot(orientation) / denom;
         if (t >= 0) {
-            return HitRecord(t, ray, *this, (ray.at(t) - pos));
+            HitRecord rec = HitRecord(t, ray, *this, this->orientation);
+            rec.shape_hit = this;
+            return rec;
         }
     }
     return HitRecord();

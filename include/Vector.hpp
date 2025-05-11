@@ -65,12 +65,7 @@ class Vector3D {
         while (true) {
             Vector3D p = Vector3D::random(-1, 1);
             double lensq = p.lengthSquared();
-
-            if (1e-160 < lensq &&
-                lensq <= 1)  // deal with small sized vector, because they
-                             // lenght squared will be so small it will cause
-                             // error or rounding to infinity
-                return p / sqrt(lensq);
+            if (1e-160 < lensq && lensq <= 1) return p / sqrt(lensq);
         }
     }
 
@@ -81,6 +76,13 @@ class Vector3D {
             return on_unit_sphere;
         else
             return -on_unit_sphere;
+    }
+
+    bool near_zero() const {
+        // Return true if the vector is close to zero in all dimensions.
+        double s = 1e-8;
+        return (std::fabs(this->x) < s) && (std::fabs(this->y) < s) &&
+               (std::fabs(this->z) < s);
     }
 };
 

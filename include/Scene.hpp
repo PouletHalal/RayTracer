@@ -24,6 +24,7 @@ private:
    public:
     HitRecord hit(const Ray &ray) const override;
     void addShape(const std::shared_ptr<IShape> &shape);
+    Math::Vector3D getEmmitance() const override { return Math::Vector3D(); };
 };
 
 }  // namespace RayTracer

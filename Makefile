@@ -17,6 +17,7 @@ SRC =		src/main.cpp			\
 			src/Rectangle.cpp		\
 			src/Plane.cpp			\
 			src/Triangle.cpp		\
+			src/Material.cpp
 
 OBJ =		$(SRC:.cpp=.o)
 

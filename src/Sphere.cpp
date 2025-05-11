@@ -14,58 +14,47 @@
 
 namespace RayTracer {
 
-// bool solveQuadratic(const double a, const double b, const double c, double &x0,
-//                     double &x1) {
-//     double discr = b * b - 4.0 * a * c;
-//     if (discr < 0.0) return false;
-
-//     if (discr == 0.0) {
-//         x0 = x1 = -0.5 * b / a;
-//     } else {
-//         double sqrtDiscr = std::sqrt(discr);
-//         double q = (b > 0.0) ? -0.5 * (b + sqrtDiscr) : -0.5 * (b - sqrtDiscr);
-//         x0 = q / a;
-//         x1 = c / q;
-//         if (x0 > x1) std::swap(x0, x1);
-//     }
-//     return true;
-// }
-
 // HitRecord Sphere::hit(const Ray &ray) const {
 //     Math::Vector3D L = ray.pos - this->pos;
 //     double a = ray.dir.dot(ray.dir);
-//     double b = 2.0 * ray.dir.dot(L);
+//     double b = ray.dir.dot(L);
 //     double c = L.dot(L) - radius * radius;
-//     double t0;
-//     double t1;
+//     double discr = b * b - a * c;
 
-//     if (!solveQuadratic(a, b, c, t0, t1)) return HitRecord();
+//     if (discr < EPSILON) return HitRecord();
 
-//     if (t0 < 0.0) {
-//         t0 = t1;
-//         if (t0 < 0.0) return HitRecord();
-//     }
+//     double sqrtDiscr = std::sqrt(discr);
+//     double t0 = (-b - sqrtDiscr) / a;
+//     double t1 = (-b + sqrtDiscr) / a;
+//     double t = (t0 > 0.0) ? t0 : t1;
 
-//     return HitRecord(t0, ray, *this, (ray.at(t0) - this->pos) / this->radius);
+//     if (t < 0.0) return HitRecord();
+
+//     HitRecord rec = HitRecord(t, ray, *this, (ray.at(t) - this->pos) /
+//     this->radius); rec.mat = this->mat; return rec;
 // }
 
 HitRecord Sphere::hit(const Ray &ray) const {
-    Math::Vector3D L = ray.pos - this->pos;
-    double a = ray.dir.dot(ray.dir);
-    double b = ray.dir.dot(L);
-    double c = L.dot(L) - radius * radius;
-    double discr = b * b - a * c;
+    Math::Vector3D oc = this->pos - ray.pos;
+    double a = ray.dir.lengthSquared();
+    double h = ray.dir.dot(oc);
+    double c = oc.lengthSquared() - radius * radius;
 
-    if (discr < EPSILON) return HitRecord();
+    double discriminant = h * h - a * c;
+    if (discriminant < 0) return HitRecord();
 
-    double sqrtDiscr = std::sqrt(discr);
-    double t0 = (-b - sqrtDiscr) / a;
-    double t1 = (-b + sqrtDiscr) / a;
-    double t = (t0 > 0.0) ? t0 : t1;
+    double sqrtd = std::sqrt(discriminant);
 
-    if (t < 0.0) return HitRecord();
+    // Find the nearest root that lies in the acceptable range.
+    double root = (h - sqrtd) / a;
+    if (root <= 1E-4 || INFINITY <= root) {
+        root = (h + sqrtd) / a;
+        if (root <= 1E-4 || INFINITY <= root) return HitRecord();
+    }
+    HitRecord rec(root, ray, *this, (ray.at(root) - this->pos) / radius);
 
-    return HitRecord(t, ray, *this, (ray.at(t) - this->pos) / this->radius);
+    rec.mat = this->mat;
+    return rec;
 }
 
 std::ostream &operator<<(std::ostream &out, const Sphere &sphere) {

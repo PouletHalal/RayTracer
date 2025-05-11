@@ -23,7 +23,7 @@ class Camera {
     double rotationZ = 0;
 
     Camera() : screen(Math::Vector3D(-0.5, -0.5, -1), Math::Vector3D(1, 0, 0), Math::Vector3D(0, 1, 0)) {};
-    Ray ray(double u, double v);
+    Ray ray(double u, double v, double screenWidth, double screenHeight);
     void setPos(Math::Vector3D pos);
     void rotateX(double angle);
     void rotateY(double angle);

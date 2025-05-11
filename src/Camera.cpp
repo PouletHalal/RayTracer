@@ -9,8 +9,19 @@
 
 namespace RayTracer {
 
-Ray Camera::ray(double u, double v) {
-    return Ray(this->pos, this->screen.pointAt(u, v) - this->pos);
+Math::Vector3D sample_square() {
+    // Returns the vector to a random point in the [-.5,-.5]-[+.5,+.5] unit
+    // square.
+    return Math::Vector3D(random_double() - 0.5, random_double() - 0.5, 0);
+}
+
+Ray Camera::ray(double u, double v, double screenWidth, double screenHeight) {
+    Math::Vector3D offset = sample_square();
+    Math::Vector3D pixel_sample = this->screen.pos +
+                                  this->screen.bottomSide * (u + (offset.x / screenWidth)) +
+                                  this->screen.leftSide * (v + (offset.y / screenHeight));
+    
+    return Ray(this->pos, pixel_sample - this->pos);
 }
 
 void Camera::setPos(Math::Vector3D pos) {
