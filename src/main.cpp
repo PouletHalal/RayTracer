@@ -19,7 +19,7 @@
 #include "Vector.hpp"
 
 #define CAM_SPEED 0.03
-#define MAX_RAY_BOUNCE 50
+#define MAX_RAY_BOUNCE 5
 #define MAX_RAY 1000
 
 struct rgb {
@@ -62,78 +62,20 @@ Math::Vector3D trace_ray(const RayTracer::Ray &r, int depth,
     if (rec.mat->scatter(r, rec, attenuation, scattered))
         return attenuation * trace_ray(scattered, depth - 1, scene);
     return Math::Vector3D(0, 0, 0);
-
-    // Math::Vector3D emittance = rec.shape_hit->getEmmitance();
-    // Math::Vector3D newDir = rec.normal +
-    // Math::Vector3D::random_unit_vector(); RayTracer::Ray newRay =
-    //     RayTracer::Ray(rec.p + rec.normal * EPSILON, newDir);
-
-    // Math::Vector3D reflectance = Math::Vector3D(0.9, 0.9, 0.9);
-    // // Compute the BRDF for this ray (assuming Lambertian reflection)
-    // float cos_theta = newDir.dot(rec.normal);
-
-    // Math::Vector3D incoming = trace_ray(newRay, depth - 1, scene);
-
-    // // Apply the Rendering Equation here.
-    // Math::Vector3D color = emittance + (incoming * 0.9 * reflectance);
-
-    // if (color.x > 1) color.x = 1;
-    // if (color.y > 1) color.y = 1;
-    // if (color.z > 1) color.z = 1;
-    // return color;
 }
 
-uint8_t *generateImage(int width, int height, RayTracer::Camera &cam) {
-    uint8_t *array =
-        static_cast<uint8_t *>(malloc(sizeof(uint8_t) * (width * height * 4)));
+uint8_t *generateImage(int width, int height, RayTracer::Camera &cam,
+                       RayTracer::Scene &scene, uint8_t *array) {
     double screenWidth = width;
     double screenHeight = height;
     Math::Vector3D vec;
-    RayTracer::Scene scene;
-    RayTracer::HitRecord hitRecord;
-    std::shared_ptr<RayTracer::Material> material_ground =
-        std::make_shared<RayTracer::Lambertian>(Math::Vector3D(0.8, 0.8, 0.0));
-    std::shared_ptr<RayTracer::Material> material_center =
-        std::make_shared<RayTracer::Lambertian>(Math::Vector3D(0.1, 0.2, 0.5));
-    std::shared_ptr<RayTracer::Material> material_left =
-        std::make_shared<RayTracer::Dielectric>(1.50);
-    std::shared_ptr<RayTracer::Material> material_bubble =
-        std::make_shared<RayTracer::Dielectric>(1.00 / 1.50);
-    std::shared_ptr<RayTracer::Material> material_right =
-        std::make_shared<RayTracer::Metal>(Math::Vector3D(0.8, 0.6, 0.2), 1.0);
 
-    // scene.addShape(std::make_shared<RayTracer::Sphere>(
-    //     Math::Vector3D(0, -4, -1), 3, Math::Vector3D(0, 0, 1)));
-    scene.addShape(std::make_shared<RayTracer::Sphere>(
-        Math::Vector3D(0.0, 100.5, -1.0), 100.0, material_ground));
-    scene.addShape(std::make_shared<RayTracer::Sphere>(
-        Math::Vector3D(0.0, 0.0, -1.2), 0.5, material_center));
-    scene.addShape(std::make_shared<RayTracer::Sphere>(
-        Math::Vector3D(-1.0, 0.0, -1.0), 0.5, material_left));
-    scene.addShape(std::make_shared<RayTracer::Sphere>(
-        Math::Vector3D(-1.0, 0.0, -1.0), 0.4, material_bubble));
-    scene.addShape(std::make_shared<RayTracer::Sphere>(
-        Math::Vector3D(1.0, 0.0, -1.0), 0.5, material_right));
-    // scene.addShape(
-    //     std::make_shared<RayTracer::Sphere>(Math::Vector3D(0, 0, -4), 0.5,
-    //     Math::Vector3D(1, 0.5, 0)));
-    // scene.addShape(
-    //     std::make_shared<RayTracer::Sphere>(Math::Vector3D(0, 0, -5), 0.5));
-    // scene.addShape(std::make_shared<RayTracer::Plane>(
-    //     Math::Vector3D(0, 0, -5.5), Math::Vector3D(0, 0, -1)));
-    // scene.addShape(std::make_shared<RayTracer::Plane>(
-    //     Math::Vector3D(0, 0, 3.5), Math::Vector3D(0, 0, 1)));
-    // scene.addShape(std::make_shared<RayTracer::Plane>(
-    //     Math::Vector3D(3.5, 0, 0), Math::Vector3D(1, 0, 0)));
-    // scene.addShape(std::make_shared<RayTracer::Plane>(
-    //     Math::Vector3D(-3.5, 0, 0), Math::Vector3D(-1, 0, 0)));
     for (double y = 0; y < screenHeight; y++) {
         for (double x = 0; x < screenWidth; x++) {
             double u = x / screenWidth;
             double v = y / screenHeight;
             RayTracer::Ray r = cam.ray(u, v, screenWidth, screenHeight);
 
-            hitRecord = scene.hit(r);
             vec = trace_ray(r, MAX_RAY_BOUNCE, scene);
             vec.x = linear_to_gamma(vec.x);
             vec.y = linear_to_gamma(vec.y);
@@ -144,6 +86,7 @@ uint8_t *generateImage(int width, int height, RayTracer::Camera &cam) {
                            static_cast<unsigned char>(vec.y * 255),
                            static_cast<unsigned char>(vec.z * 255)});
         }
+        std::cout << y << "/" << height << std::endl;
     }
     return array;
 }
@@ -168,7 +111,66 @@ int main() {
     texture.create(W, H);
     sf::Sprite sprite(texture);
     sprite.setScale(screenWidth / W, screenHeight / H);
-    cam.setPos({0, -0.25, 2});
+    cam.setPos({0, -2, 15});
+
+    uint8_t *array =
+        static_cast<uint8_t *>(malloc(sizeof(uint8_t) * (W * H * 4)));
+    RayTracer::Scene scene;
+    auto ground_material =
+        std::make_shared<RayTracer::Lambertian>(Math::Vector3D(0.5, 0.5, 0.5));
+    scene.addShape(std::make_shared<RayTracer::Sphere>(
+        Math::Vector3D(0, 1000, 0), 1000, ground_material));
+
+    for (int a = -11; a < 11; a++) {
+        for (int b = -11; b < 11; b++) {
+            auto choose_mat = random_double();
+            double size = random_double(0.15, 0.4);
+            Math::Vector3D center(a + 0.9 * random_double(), -size,
+                                  b + 0.9 * random_double());
+
+            if ((center - Math::Vector3D(4, 0.2, 0)).length() > 0.9) {
+                std::shared_ptr<RayTracer::Material> sphere_material;
+
+                if (choose_mat < 0.8) {
+                    // diffuse
+                    auto albedo =
+                        Math::Vector3D::random() * Math::Vector3D::random();
+                    sphere_material =
+                        std::make_shared<RayTracer::Lambertian>(albedo);
+                    scene.addShape(std::make_shared<RayTracer::Sphere>(
+                        center, size, sphere_material));
+                } else if (choose_mat < 0.95) {
+                    // metal
+                    auto albedo = Math::Vector3D::random(0.5, 1);
+                    auto fuzz = random_double(0, 0.5);
+                    sphere_material =
+                        std::make_shared<RayTracer::Metal>(albedo, fuzz);
+                    scene.addShape(std::make_shared<RayTracer::Sphere>(
+                        center, size, sphere_material));
+                } else {
+                    // glass
+                    sphere_material =
+                        std::make_shared<RayTracer::Dielectric>(1.5);
+                    scene.addShape(std::make_shared<RayTracer::Sphere>(
+                        center, size, sphere_material));
+                }
+            }
+        }
+    }
+
+    auto material1 = std::make_shared<RayTracer::Dielectric>(1.5);
+    scene.addShape(std::make_shared<RayTracer::Sphere>(Math::Vector3D(0, 1, 0),
+                                                       1.0, material1));
+
+    auto material2 =
+        std::make_shared<RayTracer::Lambertian>(Math::Vector3D(0.4, 0.2, 0.1));
+    scene.addShape(std::make_shared<RayTracer::Sphere>(Math::Vector3D(-4, 1, 0),
+                                                       1.0, material2));
+
+    auto material3 =
+        std::make_shared<RayTracer::Metal>(Math::Vector3D(0.7, 0.6, 0.5), 0.0);
+    scene.addShape(std::make_shared<RayTracer::Sphere>(Math::Vector3D(4, 1, 0),
+                                                       1.0, material3));
     for (int y = 0; y < H; y++) {
         for (int x = 0; x < W; x++) {
             for (int i = 0; i < 4; i++) {
@@ -182,7 +184,7 @@ int main() {
         if (clock.getElapsedTime().asSeconds() < 1.0 / 60.0) continue;
         clock.restart();
 
-        pixels = generateImage(W, H, cam);
+        pixels = generateImage(W, H, cam, scene, array);
         for (int y = 0; y < H; y++) {
             for (int x = 0; x < W; x++) {
                 for (int i = 0; i < 3; i++) {
@@ -192,7 +194,6 @@ int main() {
                 }
             }
         }
-        free(pixels);
         nbrRay++;
         if (nbrRay > MAX_RAY) nbrRay = 0;
         texture.update(true_image);
