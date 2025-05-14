@@ -21,12 +21,10 @@ class Sphere : public AShape {
    public:
     Math::Vector3D pos;
     double radius;
-    Math::Vector3D emittance;
     std::shared_ptr<Material> mat;
 
-    Sphere(Math::Vector3D pos, double radius, std::shared_ptr<Material> mat, Math::Vector3D emittance = Math::Vector3D(0, 0, 0)) : pos(pos), radius(radius), mat(mat), emittance(emittance) {};
-    HitRecord hit(const Ray &ray) const override;
-    Math::Vector3D getEmmitance() const override { return this->emittance; };
+    Sphere(Math::Vector3D pos, double radius, std::shared_ptr<Material> mat);
+    HitRecord hit(const Ray &ray, Interval interval) const override;
 };
 
 std::ostream &operator<<(std::ostream &out, const Sphere &ray);

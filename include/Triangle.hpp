@@ -21,7 +21,7 @@ class Triangle : public AShape {
     Triangle() = default;
     ~Triangle() = default;
     Triangle(Math::Vector3D a, Math::Vector3D b, Math::Vector3D c) : a(a), b(b), c(c) {};
-    HitRecord hit(const Ray &ray) const override;
+    HitRecord hit(const Ray &ray, Interval interval) const override;
 
    protected:
    private:

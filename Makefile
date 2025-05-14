@@ -17,13 +17,16 @@ SRC =		src/main.cpp			\
 			src/Rectangle.cpp		\
 			src/Plane.cpp			\
 			src/Triangle.cpp		\
+			src/Utils.cpp			\
+			src/AABB.cpp			\
+			src/AShape.cpp			\
 			src/Material.cpp
 
 OBJ =		$(SRC:.cpp=.o)
 
 CFLAGS =	-Wall -Wextra -lsfml-graphics -lsfml-window -lsfml-system
 
-CPPFLAGS =	-iquote ./include
+CPPFLAGS =	-iquote ./include -g
 
 all: $(NAME)
 

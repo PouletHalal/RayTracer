@@ -14,27 +14,14 @@
 
 namespace RayTracer {
 
-// HitRecord Sphere::hit(const Ray &ray) const {
-//     Math::Vector3D L = ray.pos - this->pos;
-//     double a = ray.dir.dot(ray.dir);
-//     double b = ray.dir.dot(L);
-//     double c = L.dot(L) - radius * radius;
-//     double discr = b * b - a * c;
+Sphere::Sphere(Math::Vector3D pos, double radius, std::shared_ptr<Material> mat)
+    : pos(pos), radius(radius), mat(mat) {
+    Math::Vector3D rvec = Math::Vector3D(radius, radius, radius);
+    this->bbox = AABB(pos - (rvec), pos + (rvec));
+};
 
-//     if (discr < EPSILON) return HitRecord();
-
-//     double sqrtDiscr = std::sqrt(discr);
-//     double t0 = (-b - sqrtDiscr) / a;
-//     double t1 = (-b + sqrtDiscr) / a;
-//     double t = (t0 > 0.0) ? t0 : t1;
-
-//     if (t < 0.0) return HitRecord();
-
-//     HitRecord rec = HitRecord(t, ray, *this, (ray.at(t) - this->pos) /
-//     this->radius); rec.mat = this->mat; return rec;
-// }
-
-HitRecord Sphere::hit(const Ray &ray) const {
+HitRecord Sphere::hit(const Ray &ray, Interval interval) const {
+    // return this->bbox.hit(ray, interval);
     Math::Vector3D oc = this->pos - ray.pos;
     double a = ray.dir.lengthSquared();
     double h = ray.dir.dot(oc);
@@ -47,9 +34,9 @@ HitRecord Sphere::hit(const Ray &ray) const {
 
     // Find the nearest root that lies in the acceptable range.
     double root = (h - sqrtd) / a;
-    if (root <= 1E-4 || INFINITY <= root) {
+    if (root <= interval.min || interval.max <= root) {
         root = (h + sqrtd) / a;
-        if (root <= 1E-4 || INFINITY <= root) return HitRecord();
+        if (root <= interval.min || interval.max <= root) return HitRecord();
     }
     HitRecord rec(root, ray, *this, (ray.at(root) - this->pos) / radius);
 

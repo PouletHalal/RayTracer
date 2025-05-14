@@ -3,3 +3,5 @@ build
 plugin
 
 scene.cfg
+uftrace
+gprof2dot

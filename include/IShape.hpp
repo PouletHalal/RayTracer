@@ -10,20 +10,23 @@
 
 #include <memory>
 
+#include "FixCrossInclude.hpp"
+#include "HitRecord.hpp"
+#include "Interval.hpp"
 #include "Ray.hpp"
 #include "Vector.hpp"
-#include "HitRecord.hpp"
 
 namespace RayTracer {
 
-class HitRecord;  // this fix cross include, trust the process
-
 class IShape {
    public:
-    virtual HitRecord hit(const Ray &ray) const = 0;
-    virtual Math::Vector3D getEmmitance() const = 0;
+    int depth = 0;
+    virtual HitRecord hit(const Ray &ray, Interval infinity) const = 0;
+    virtual AABB boundingBox() const = 0;
 };
 
 }  // namespace RayTracer
+
+#include "AABB.hpp"  // don't move this, trust the process (cross include)
 
 #endif

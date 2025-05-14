@@ -8,11 +8,19 @@
 #ifndef ASHAPE_HPP
 #define ASHAPE_HPP
 
+#include "FixCrossInclude.hpp"
+#include "AABB.hpp"
 #include "IShape.hpp"
 
 namespace RayTracer {
 
-class AShape : public IShape {};
+class AShape : public IShape {
+   protected:
+    AABB bbox;
+
+   public:
+    AABB boundingBox() const override;
+};
 
 }  // namespace RayTracer
 

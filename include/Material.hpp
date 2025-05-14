@@ -1,12 +1,18 @@
+/*
+** EPITECH PROJECT, 2025
+** B-OOP-400-PAR-4-1-raytracer-boris.cheng
+** File description:
+** Material
+*/
+
 #ifndef MATERIAL_H
 #define MATERIAL_H
 
+#include "FixCrossInclude.hpp"
 #include "IShape.hpp"
 #include "Vector.hpp"
 
 namespace RayTracer {
-
-class HitRecord;  // this fix cross include, trust the process
 
 class Material {
    public:

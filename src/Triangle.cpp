@@ -9,7 +9,7 @@
 
 namespace RayTracer {
 
-HitRecord Triangle::hit(const Ray &ray) const {
+HitRecord Triangle::hit(const Ray &ray, Interval interval) const {
     Math::Vector3D ab = b - a;
     Math::Vector3D ac = c - a;
     Math::Vector3D n = ab.cross(ac);
@@ -19,7 +19,8 @@ HitRecord Triangle::hit(const Ray &ray) const {
     double d = -n.dot(a);
     double t = -(n.dot(ray.pos) + d) / dot;
 
-    if (t < 0) return HitRecord();
+    if (t <= interval.min || interval.max <= t)
+        return HitRecord();
     Math::Vector3D p = ray.pos + ray.dir * t;
     Math::Vector3D ne;
 

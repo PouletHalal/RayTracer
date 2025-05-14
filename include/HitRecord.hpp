@@ -8,15 +8,13 @@
 #ifndef HITRECORD_HPP
 #define HITRECORD_HPP
 
+#include "FixCrossInclude.hpp"
 #include "IShape.hpp"
 #include "Material.hpp"
 #include "Ray.hpp"
 #include "Vector.hpp"
 
 namespace RayTracer {
-
-class IShape;  // this fix cross include, trust the process
-class Material;  // this fix cross include, trust the process
 
 class HitRecord {
    public:

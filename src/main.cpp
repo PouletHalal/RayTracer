@@ -9,6 +9,7 @@
 #include <SFML/Graphics.hpp>
 #include <SFML/Window/Keyboard.hpp>
 
+#include "BVHNode.hpp"
 #include "Camera.hpp"
 #include "HitRecord.hpp"
 #include "Material.hpp"
@@ -19,8 +20,9 @@
 #include "Vector.hpp"
 
 #define CAM_SPEED 0.03
-#define MAX_RAY_BOUNCE 5
-#define MAX_RAY 1000
+#define MAX_RAY_BOUNCE 10
+#define MAX_RAY 5
+#define GRAPHIC true
 
 struct rgb {
     uint8_t r;
@@ -52,11 +54,12 @@ Math::Vector3D trace_ray(const RayTracer::Ray &r, int depth,
                          const RayTracer::Scene &scene) {
     if (depth <= 0) return Math::Vector3D(0, 0, 0);
 
-    RayTracer::HitRecord rec = scene.hit(r);
+    RayTracer::HitRecord rec = scene.hit(r, Interval(0, DOUBLE_INFINITY));
 
-    if (rec.missed || rec.t < 1E-3) {
+    if (rec.missed || rec.t < 1E-10) {
         return getSkyColor(r);
     }
+
     RayTracer::Ray scattered;
     Math::Vector3D attenuation;
     if (rec.mat->scatter(r, rec, attenuation, scattered))
@@ -75,12 +78,10 @@ uint8_t *generateImage(int width, int height, RayTracer::Camera &cam,
             double u = x / screenWidth;
             double v = y / screenHeight;
             RayTracer::Ray r = cam.ray(u, v, screenWidth, screenHeight);
-
             vec = trace_ray(r, MAX_RAY_BOUNCE, scene);
             vec.x = linear_to_gamma(vec.x);
             vec.y = linear_to_gamma(vec.y);
             vec.z = linear_to_gamma(vec.z);
-
             setPixelColor(array, y * width + x,
                           {static_cast<unsigned char>(vec.x * 255),
                            static_cast<unsigned char>(vec.y * 255),
@@ -96,11 +97,12 @@ int main() {
     int screenHeight = 800;
     sf::Clock clock;
     RayTracer::Camera cam;
+#if GRAPHIC
     sf::RenderWindow window(sf::VideoMode(screenWidth, screenHeight),
                             "SFML window");
-
-    const unsigned int W = 800;
-    const unsigned int H = 800;
+#endif
+    const unsigned int W = 200;
+    const unsigned int H = 200;
 
     long long *image =
         static_cast<long long *>(malloc(sizeof(long long) * (W * H * 4)));
@@ -158,19 +160,22 @@ int main() {
         }
     }
 
-    auto material1 = std::make_shared<RayTracer::Dielectric>(1.5);
-    scene.addShape(std::make_shared<RayTracer::Sphere>(Math::Vector3D(0, 1, 0),
-                                                       1.0, material1));
+    // auto material1 = std::make_shared<RayTracer::Dielectric>(1.5);
+    // scene.addShape(std::make_shared<RayTracer::Sphere>(Math::Vector3D(0, 1, 0),
+    //                                                    1.0, material1));
 
-    auto material2 =
-        std::make_shared<RayTracer::Lambertian>(Math::Vector3D(0.4, 0.2, 0.1));
-    scene.addShape(std::make_shared<RayTracer::Sphere>(Math::Vector3D(-4, 1, 0),
-                                                       1.0, material2));
+    // auto material2 =
+    //     std::make_shared<RayTracer::Lambertian>(Math::Vector3D(0.4, 0.2, 0.1));
+    // scene.addShape(std::make_shared<RayTracer::Sphere>(Math::Vector3D(-4, 1, 0),
+    //                                                    1.0, material2));
 
-    auto material3 =
-        std::make_shared<RayTracer::Metal>(Math::Vector3D(0.7, 0.6, 0.5), 0.0);
-    scene.addShape(std::make_shared<RayTracer::Sphere>(Math::Vector3D(4, 1, 0),
-                                                       1.0, material3));
+    // auto material3 =
+    //     std::make_shared<RayTracer::Metal>(Math::Vector3D(0.7, 0.6, 0.5), 0.0);
+    // scene.addShape(std::make_shared<RayTracer::Sphere>(Math::Vector3D(4, 1, 0),
+    //                                                    1.0, material3));
+
+    // scene = RayTracer::Scene(std::make_shared<BVHNode>(scene, 12));
+
     for (int y = 0; y < H; y++) {
         for (int x = 0; x < W; x++) {
             for (int i = 0; i < 4; i++) {
@@ -180,7 +185,12 @@ int main() {
             }
         }
     }
-    while (window.isOpen()) {
+    int i = 0;
+#if GRAPHIC
+    while (window.isOpen() && i > -1) {
+#else
+    while (i > -1) {
+#endif
         if (clock.getElapsedTime().asSeconds() < 1.0 / 60.0) continue;
         clock.restart();
 
@@ -194,13 +204,25 @@ int main() {
                 }
             }
         }
-        nbrRay++;
-        if (nbrRay > MAX_RAY) nbrRay = 0;
         texture.update(true_image);
+        nbrRay++;
+        if (nbrRay > MAX_RAY) {
+            nbrRay = 0;
+            for (int y = 0; y < H; y++) {
+                for (int x = 0; x < W; x++) {
+                    for (int i = 0; i < 4; i++) {
+                        int index = (y * W + x) * 4 + i;
+                        image[index] = 0;
+                    }
+                }
+            }
+        }
 
+#if GRAPHIC
         sf::Event event;
         while (window.pollEvent(event))
             if (event.type == sf::Event::Closed) window.close();
+#endif
 
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::Q))
             cam.move({-CAM_SPEED, 0, 0});
@@ -220,9 +242,12 @@ int main() {
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::G)) cam.rotateX(-0.1);
 
         std::cout << "frame count: " << nbrRay << std::endl;
+#if GRAPHIC
         window.clear();
         window.draw(sprite);
         window.display();
+#endif
+        i++;
     }
 
     return EXIT_SUCCESS;

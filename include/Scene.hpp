@@ -8,23 +8,24 @@
 #ifndef SCENE_HPP
 #define SCENE_HPP
 
-#include <list>
+#include <vector>
 
+#include "AShape.hpp"
 #include "HitRecord.hpp"
-#include "IShape.hpp"
 
 // TODO : a Scene class
 
 namespace RayTracer {
 
-class Scene : public IShape {
-private:
-    std::list<std::shared_ptr<IShape>> shapeList;
-
+class Scene : public AShape {
    public:
-    HitRecord hit(const Ray &ray) const override;
-    void addShape(const std::shared_ptr<IShape> &shape);
-    Math::Vector3D getEmmitance() const override { return Math::Vector3D(); };
+   Scene() = default;
+   Scene(std::shared_ptr<IShape> shape);
+   Scene(std::vector<std::shared_ptr<IShape>> shapeList);
+   HitRecord hit(const Ray &ray, Interval interval) const override;
+   void addShape(const std::shared_ptr<IShape> &shape);
+
+    std::vector<std::shared_ptr<IShape>> shapeList;
 };
 
 }  // namespace RayTracer
