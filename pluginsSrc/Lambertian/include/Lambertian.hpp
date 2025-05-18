@@ -19,7 +19,7 @@ class Lambertian : public Material {
                  Math::Vector3D &attenuation, Ray &scattered) const override;
     std::unique_ptr<Material> duplicate(void) override;
     void setColor(const Math::Vector3D &newColor) override;
-
+    void save(libconfig::Setting &parent) const override;
 
    private:
     Math::Vector3D albedo;

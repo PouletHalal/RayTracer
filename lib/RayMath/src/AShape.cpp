@@ -23,6 +23,10 @@ const AABB &AShape::boundingBox() const {
     return this->bbox;
 }
 
+void AShape::setBoundingBox(const AABB &bbox) {
+    this->bbox.setBoundingBox(bbox);
+}
+
 std::unique_ptr<Material> &AShape::getMaterial() {
     return this->material_;
 }

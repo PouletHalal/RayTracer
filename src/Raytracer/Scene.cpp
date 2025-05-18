@@ -8,6 +8,7 @@
 #include "Raytracer/Scene.hpp"
 
 #include <cstdio>
+#include <libconfig.h++>
 #include <memory>
 
 #include "BVHNode.hpp"
@@ -16,8 +17,20 @@
 
 namespace RayTracer {
 
+Scene::Scene() {
+    this->shapes_.reserve(MAX_SHAPES_PER_SCENE);
+}
+
 Scene::Scene(std::unique_ptr<IShape> shape) {
+    this->shapes_.reserve(MAX_SHAPES_PER_SCENE);
     this->addShape(std::move(shape));
+}
+
+void Scene::save(libconfig::Setting &parent) const {
+    libconfig::Setting &list = parent.add(libconfig::Setting::TypeList);
+    for (const auto &it : this->shapes_) {
+        it->save(list);
+    }
 }
 
 HitRecord RayTracer::Scene::hits(const Ray &ray, Interval ray_t) const {
@@ -25,17 +38,6 @@ HitRecord RayTracer::Scene::hits(const Ray &ray, Interval ray_t) const {
         throw BVHException("scene bvh null");
     }
     return this->bvh->hits(ray, ray_t);
-    HitRecord closest;
-    float closestDistance = DOUBLE_INFINITY;
-
-    for (const auto &shape : this->shapes_) {
-        const HitRecord hit = shape->hits(ray, ray_t);
-        if (!hit.missed && hit.t < closestDistance) {
-            closestDistance = hit.t;
-            closest = hit;
-        }
-    }
-    return closest;
 }
 
 void Scene::addShape(std::unique_ptr<IShape> shape) {

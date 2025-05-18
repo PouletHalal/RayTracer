@@ -22,6 +22,14 @@ Dielectric::Dielectric(const libconfig::Setting &config) {
     }
 }
 
+void Dielectric::save(libconfig::Setting &parent) const {
+    libconfig::Setting &mat = parent.add("material", libconfig::Setting::TypeGroup);
+    mat.add("type", libconfig::Setting::TypeString) = "dielectric";
+    libconfig::Setting &data = mat.add("data", libconfig::Setting::TypeGroup);
+
+    data.add("refraction_index", libconfig::Setting::TypeFloat) = this->refraction_index;
+}
+
 bool Dielectric::scatter(const Ray &r_in, const HitRecord &rec,
                          Math::Vector3D &attenuation, Ray &scattered) const {
     attenuation = Math::Vector3D(1.0, 1.0, 1.0);
@@ -40,7 +48,7 @@ bool Dielectric::scatter(const Ray &r_in, const HitRecord &rec,
         direction = refract(unit_direction, rec.normal, ri);
     }
 
-    scattered = Ray(rec.p, direction);
+    scattered = Ray(rec.p - rec.normal * 1.2E-4, direction);
     return true;
 }
 

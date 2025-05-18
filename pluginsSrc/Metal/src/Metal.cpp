@@ -35,6 +35,17 @@ Metal::Metal(const libconfig::Setting &config) {
     this->albedo.setRange(255, 1);
 }
 
+void Metal::save(libconfig::Setting &parent) const {
+    libconfig::Setting &mat = parent.add("material", libconfig::Setting::TypeGroup);
+    mat.add("type", libconfig::Setting::TypeString) = "metal";
+    libconfig::Setting &data = mat.add("data", libconfig::Setting::TypeGroup);
+
+    data.add("red", libconfig::Setting::TypeFloat) = this->albedo.x * 255;
+    data.add("green", libconfig::Setting::TypeFloat) = this->albedo.y * 255;
+    data.add("blue", libconfig::Setting::TypeFloat) = this->albedo.z * 255;
+    data.add("fuzz", libconfig::Setting::TypeFloat) = this->fuzz;
+}
+
 static Math::Vector3D reflect(const Math::Vector3D &v,
                               const Math::Vector3D &n) {
     return v - n * (2 * v.dot(n));

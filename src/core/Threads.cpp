@@ -37,8 +37,8 @@ void RaytracerCore::computePrecision() {
         }
         this->imageMean_ = image;
     } else {
-        for (size_t i = 0; (i < this->imageMean_.size()) && !this->moving_ &&
-                           !this->killThreads_;
+        for (size_t i = 0; i < (this->xResolution_ * this->yResolution_) &&
+                           !this->moving_ && !this->killThreads_;
              i++) {
             this->image_[i] += image[i];
             this->imageMean_[i] = this->image_[i] / (this->nbImage_ + 1);

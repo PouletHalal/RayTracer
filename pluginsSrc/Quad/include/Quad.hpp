@@ -36,6 +36,7 @@ class Quad : public AShape {
     HitRecord hits(const Ray &ray, Interval ray_t) const override;
     Math::Vector3D getPointColor(const Math::Vector3D &) const override {return {1, 1, 1};};
     void setMaterial(std::unique_ptr<Material> &) override;
+    void save(libconfig::Setting &) const override;
 
 };
 }  // namespace RayTracer

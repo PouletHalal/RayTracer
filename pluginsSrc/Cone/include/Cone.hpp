@@ -32,13 +32,14 @@ namespace RayTracer
         Cone(double halfAngle, double height, Math::Vector3D tipPosition, Math::Vector3D axis) : angle(halfAngle), h_(height), tipPosition_(tipPosition), axis_(axis) {};
         Cone(const libconfig::Setting &settings);
         ~Cone() = default;
-        void scale(size_t ) override {};
+        void scale(size_t) override {};
         void move(const Math::Vector3D &) override {};
         void rotate(const Math::Vector3D &) override {};
         void setPosition(const Math::Vector3D &) override {};
         HitRecord hits(const Ray &ray, Interval) const override;
-        HitRecord hitsCapOnly(const Ray &ray) const;
+        HitRecord hitsCapOnly(const Ray &ray, Interval ray_t) const;
         Math::Vector3D getPointColor(const Math::Vector3D &) const override;
+        void save(libconfig::Setting &) const override;
     };
 }
 #endif

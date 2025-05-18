@@ -66,18 +66,52 @@ void Triangle::rotate(const Math::Vector3D &angles) {
     // a += toOrigin;
     // b += toOrigin;
     // c += toOrigin;
+    if (angles.x) {
+        a.rotateX(angles.x);
+        b.rotateX(angles.x);
+        c.rotateX(angles.x);
+    }
     if (angles.y) {
         a.rotateY(angles.y);
         b.rotateY(angles.y);
         c.rotateY(angles.y);
+    }
+    if (angles.z) {
+        a.rotateZ(angles.x);
+        b.rotateZ(angles.x);
+        c.rotateZ(angles.x);
     }
     // a -= toOrigin;
     // b -= toOrigin;
     // c -= toOrigin;
 }
 
+void Triangle::save(libconfig::Setting &parent) const {
+    libconfig::Setting &sphereSettings =
+        parent.add(libconfig::Setting::TypeGroup);
+    sphereSettings.add("type", libconfig::Setting::TypeString) = "shape";
+    sphereSettings.add("name", libconfig::Setting::TypeString) = "triangle";
+    libconfig::Setting &data =
+        sphereSettings.add("data", libconfig::Setting::TypeGroup);
+
+
+    libconfig::Setting &aSettings =
+        data.add("a", libconfig::Setting::TypeGroup);
+    libconfig::Setting &bSettings =
+        data.add("b", libconfig::Setting::TypeGroup);
+    libconfig::Setting &cSettings =
+        data.add("c", libconfig::Setting::TypeGroup);
+
+    Math::writeUpVector(aSettings, this->a);
+    Math::writeUpVector(bSettings, this->b);
+    Math::writeUpVector(cSettings, this->c);
+    if (this->texture_.hasValue()) {
+        data.add("texture", libconfig::Setting::TypeString) = this->texture_.getName();
+    }
+    this->material_->save(sphereSettings);
+}
+
 HitRecord Triangle::hits(const Ray &ray, Interval ray_t) const {
-  // return this->bbox.hits(ray, ray_t);
   Math::Vector3D ab = b - a;
   Math::Vector3D ac = c - a;
   Math::Vector3D n = ab.cross(ac);

@@ -26,6 +26,10 @@ class Material : public IPlugin {
                          Math::Vector3D &attenuation, Ray &scattered) const = 0;
     virtual std::unique_ptr<Material> duplicate(void) = 0;
     virtual void setColor(const Math::Vector3D &newColor) = 0;
+    virtual void save(libconfig::Setting &parent) const = 0;
+    virtual Math::Vector3D emitted() const {
+        return Math::Vector3D(0, 0, 0);
+    }
 };
 
 };  // namespace RayTracer

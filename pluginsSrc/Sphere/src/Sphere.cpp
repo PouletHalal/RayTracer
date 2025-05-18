@@ -102,6 +102,23 @@ std::ostream &operator<<(std::ostream &out, const Sphere &sphere) {
                << ")" << std::endl;
 }
 
+void Sphere::save(libconfig::Setting &parent) const {
+  libconfig::Setting &sphereSettings =
+      parent.add(libconfig::Setting::TypeGroup);
+  sphereSettings.add("type", libconfig::Setting::TypeString) = "shape";
+  sphereSettings.add("name", libconfig::Setting::TypeString) = "sphere";
+  libconfig::Setting &data =
+      sphereSettings.add("data", libconfig::Setting::TypeGroup);
+  libconfig::Setting &posSettings =
+      data.add("pos", libconfig::Setting::TypeGroup);
+  Math::writeUpVector(posSettings, this->pos);
+  data.add("radius", libconfig::Setting::TypeFloat) = radius;
+  if (this->texture_.hasValue()) {
+      data.add("texture", libconfig::Setting::TypeString) = this->texture_.getName();
+  }
+  this->material_->save(sphereSettings);
+}
+
 }  // namespace RayTracer
 
 extern "C" {

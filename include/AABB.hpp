@@ -26,6 +26,9 @@ class LambertianDebug : public Material {
                  Math::Vector3D &attenuation, Ray &scattered) const override;
     virtual std::unique_ptr<Material> duplicate(void) override;
     void setColor(const Math::Vector3D &) override {};
+    void save(libconfig::Setting &) const override {};
+
+
 
    private:
     Math::Vector3D albedo;
@@ -36,10 +39,12 @@ class AABB : public IShape {
     Interval x, y, z;
 
     AABB();
+    AABB(const AABB &bbox);
     AABB(const Interval &x, const Interval &y, const Interval &z);
     AABB(const Math::Vector3D &a, const Math::Vector3D &b);
     AABB(const AABB &box0, const AABB &box1);
 
+    AABB &operator=(const RayTracer::AABB &bbox);
     const Interval &axisInterval(int n) const;
     bool trueHit(const Ray &r, Interval ray_t) const;
 
@@ -51,12 +56,14 @@ class AABB : public IShape {
     void scale(size_t scale) override;
     void setPosition(const Math::Vector3D &newPos) override;
     const AABB &boundingBox() const override;
+    void setBoundingBox(const AABB &bbox) override;
     Math::Vector3D getPointColor(const Math::Vector3D &) const override {return {1, 1, 1};};
     void setMaterial(std::unique_ptr<Material> &newMaterial) override;
     std::unique_ptr<Material> &getMaterial() override {return this->material_;};
     void reset(void);
     BVHNode *getBVH(void) const override { return nullptr; };
     void setBVH(BVHNode *) override {};
+    void save(libconfig::Setting &) const override {return;};
 
    private:
     std::unique_ptr<Material> material_;

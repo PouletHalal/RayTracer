@@ -25,6 +25,7 @@ add_executable(${PROJECT_NAME}
     src/core/Threads.cpp
     src/core/ComputeGraphic.cpp
     src/core/ComputePPM.cpp
+    src/UI/Shell/Shell.cpp
 )
 
 target_include_directories(${PROJECT_NAME}

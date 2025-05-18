@@ -5,6 +5,7 @@
 ** core constructor
 */
 
+#include <unistd.h>
 #include <algorithm>
 #include <cstddef>
 #include <iostream>
@@ -98,6 +99,7 @@ void RaytracerCore::initShape(const std::string &name, RayTracer::Scene &scene,
                                "\": " + exc.what());
         return;
     }
+    // shape->setBoundingBox(RayTracer::AABB(Math::Vector3D(-100000, -100000, -100000), Math::Vector3D(100000, 100000, 100000)));
     scene.addShape(std::move(shape));
 }
 
@@ -201,6 +203,59 @@ void RaytracerCore::startThreads(size_t nbThreads) {
     }
 }
 
+void RaytracerCore::loadFile(std::string file, std::optional<RayTracer::Camera> &camera) {
+    libconfig::Config config;
+
+    config.setOptions(libconfig::Config::OptionAutoConvert |
+                      libconfig::Config::OptionAllowScientificNotation);
+    try {
+        config.readFile(file);
+        this->initCamera(file, config, camera);
+        this->initPlugins(file, config);
+        if (this->mainScene_.shapes_.empty()) {
+            throw ParsingException("empty scene");
+        }
+        this->mainScene_.bvh = std::make_unique<RayTracer::BVHNode>(this->mainScene_.shapes_, 0, this->mainScene_.shapes_.size());
+        this->mainScene_.bvh->parentObject = nullptr;
+    } catch (const libconfig::FileIOException &exc) {
+        std::cerr << "error parsing file \"" << file
+                  << "\", failed to open file" << std::endl;
+    } catch (const libconfig::ParseException &) {
+        std::cerr << "error parsing file \"" << file << "\", invalid format"
+                  << std::endl;
+    }
+}
+
+void RaytracerCore::loadFiles(const std::vector<std::string> &files) {
+    std::optional<RayTracer::Camera> camera = std::nullopt;
+
+    this->imageMutex_.lock();
+    this->moving_ = true;
+    sleep(1);
+    this->mainScene_.shapes_.clear();
+
+    this->nbImage_ = 0;
+    for (const std::string &file : files) {
+        this->loadFile(file, camera);
+    }
+    if (camera.has_value()) {
+        this->setCamera(std::move(camera.value()));
+    } else {
+        throw ParsingException("missing camera");
+    }
+    this->moving_ = false;
+    this->imageMutex_.unlock();
+}
+
+void RaytracerCore::setCamera(RayTracer::Camera &&cam) {
+    this->cameras_.push_back(std::make_unique<RayTracer::Camera>((cam)));
+
+    std::unique_ptr<RayTracer::Camera> &cam1 = cameras_[currentCameraId_];
+    cameras_[currentCameraId_]->screen_.bottomSide.x =
+     cameras_[currentCameraId_]->screen_.leftSide.y * (double) xResolution_ / yResolution_;
+    cam1->screen_.pos = {cam1->pos_.x - cam1->screen_.bottomSide.x / 2, cam1->pos_.y - cam1->screen_.leftSide.y / 2, cam1->pos_.z - 1.5};
+}
+
 RaytracerCore::RaytracerCore(const ArgManager::ArgumentStruct &args)
     : graphic_(args.graphicMode),
       nbImage_(0),
@@ -214,32 +269,6 @@ RaytracerCore::RaytracerCore(const ArgManager::ArgumentStruct &args)
       compressedYResolution_(std::max((int)args.yResolution / 10, 20)),
       compressedImage_(
           this->compressedXResolution_ * this->compressedYResolution_ * 4, 0) {
-    std::optional<RayTracer::Camera> camera = std::nullopt;
-    libconfig::Config config;
-
-    config.setOptions(libconfig::Config::OptionAutoConvert |
-                      libconfig::Config::OptionAllowScientificNotation);
-    for (const std::string &file : args.configFile) {
-        try {
-            config.readFile(file);
-            this->initCamera(file, config, camera);
-            this->initPlugins(file, config);
-            if (this->mainScene_.shapes_.empty()) {
-                throw ParsingException("empty scene");
-            }
-            this->mainScene_.bvh = std::make_unique<RayTracer::BVHNode>(
-                this->mainScene_.shapes_, 0, this->mainScene_.shapes_.size());
-            this->mainScene_.bvh->parentObject = nullptr;
-        } catch (const libconfig::FileIOException &exc) {
-            std::cerr << "error parsing file \"" << file
-                      << "\", failed to open file" << std::endl;
-        } catch (const libconfig::ParseException &) {
-            std::cerr << "error parsing file \"" << file << "\", invalid format"
-                      << std::endl;
-        }
-    }
-    if (camera.has_value()) {
-        this->camera_ = std::move(camera.value());
-    }
+    this->loadFiles(args.configFile);
     this->startThreads(args.nb_thread);
 }

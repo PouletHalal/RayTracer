@@ -10,6 +10,7 @@
 
 #include <array>
 #include <functional>
+#include <libconfig.h++>
 #include <vector>
 
 #include "CustomException.hpp"
@@ -51,6 +52,9 @@ class BVHNode : public IShape {
     std::unique_ptr<Material> &getMaterial() override {return this->material_; };
     BVHNode *getBVH() const override { return nullptr; };
     void setBVH(BVHNode *) override {};
+    void save(libconfig::Setting &) const override {};
+    virtual void setBoundingBox(const AABB &) override {};
+
 
     IShape *parentObject = nullptr;
     BVHNode *parentBvh = nullptr;

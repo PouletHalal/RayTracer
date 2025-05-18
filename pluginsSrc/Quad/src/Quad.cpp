@@ -112,6 +112,25 @@ void Quad::setMaterial(std::unique_ptr<Material> &m) {
     this->_box.setMaterial(m);
 }
 
+void Quad::save(libconfig::Setting &parent) const {
+  libconfig::Setting &quadSettings =
+      parent.add(libconfig::Setting::TypeGroup);
+  quadSettings.add("type", libconfig::Setting::TypeString) = "shape";
+  quadSettings.add("name", libconfig::Setting::TypeString) = "quad";
+  libconfig::Setting &data =
+      quadSettings.add("data", libconfig::Setting::TypeGroup);
+  libconfig::Setting &posSettings =
+      data.add("origin", libconfig::Setting::TypeGroup);
+  Math::writeUpVector(posSettings, this->_origin);
+  libconfig::Setting &uSettings =
+      data.add("u", libconfig::Setting::TypeGroup);
+  Math::writeUpVector(uSettings, this->_origin);
+  libconfig::Setting &vSettings =
+      data.add("v", libconfig::Setting::TypeGroup);
+  Math::writeUpVector(vSettings, this->_origin);
+  this->material_->save(quadSettings);
+}
+
 }  // namespace RayTracer
 
 extern "C" {

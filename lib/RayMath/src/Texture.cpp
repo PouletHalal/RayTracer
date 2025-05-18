@@ -75,7 +75,7 @@ static Math::Vector3D getPixel(const std::string &filePath,
 
 Texture::Texture(): image_(1, {1, {1, 1, 1}}) {}
 
-Texture::Texture(std::string filePath): haveOne_(true) {
+Texture::Texture(std::string filePath): haveOne_(true), name(filePath) {
     std::ifstream stream(filePath);
     TextureInfos infos = getTextureInfos(filePath, stream);
     std::string pixels;
@@ -106,6 +106,10 @@ Math::Vector3D Texture::getColor(double u, double v) const {
 
 bool Texture::hasValue() const {
     return this->haveOne_;
+}
+
+const std::string &Texture::getName() const {
+    return this->name;
 }
 
 };  // namespace RayTracer

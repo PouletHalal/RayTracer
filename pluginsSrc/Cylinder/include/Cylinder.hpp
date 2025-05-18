@@ -25,6 +25,7 @@ class Cylinder : public AShape {
     void rotate(const Math::Vector3D &angles) override;
     void scale(size_t scale) override;
     void setPosition(const Math::Vector3D &newPos) override;
+    void save(libconfig::Setting &parent) const override;
     Math::Vector3D getPointColor(const Math::Vector3D &) const override;
 
    private:

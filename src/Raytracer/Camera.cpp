@@ -8,6 +8,7 @@
 #include "Raytracer/Camera.hpp"
 
 #include <cmath>
+#include <libconfig.h++>
 #include <utility>
 
 #include "Raytracer/Ray.hpp"
@@ -39,6 +40,7 @@ RayTracer::Camera::Camera(libconfig::Setting &settings)
 
 RayTracer::Ray RayTracer::Camera::ray(double u, double v, double xResolution,
                                       double yResolution) {
+    v = -v + 1;
     Math::Vector3D offset = sample_square();
     Math::Vector3D pixel_sample =
         this->screen_.pos +
@@ -49,9 +51,9 @@ RayTracer::Ray RayTracer::Camera::ray(double u, double v, double xResolution,
 }
 
 void RayTracer::Camera::move(const Math::Vector3D &offset) {
-    this->setPosition(this->pos_ + offset.rotatedX(this->rotationX)
-                                       .rotatedY(this->rotationY)
-                                       .rotatedZ(this->rotationZ));
+    this->setPosition(this->pos_ + offset.rotatedX(this->rotation_.x)
+                                       .rotatedY(this->rotation_.y)
+                                       .rotatedZ(this->rotation_.z));
 }
 
 void RayTracer::Camera::rotate(const Math::Vector3D &angles) {
@@ -63,7 +65,7 @@ void RayTracer::Camera::rotate(const Math::Vector3D &angles) {
 void RayTracer::Camera::rotateX(double angle) {
     Math::Vector3D toScreen = this->screen_.pos - this->pos_;
 
-    this->rotationX += angle;
+    this->rotation_.x += angle;
     this->screen_.pos -= toScreen;
     toScreen.rotateX(angle);
     this->screen_.pos += toScreen;
@@ -73,7 +75,7 @@ void RayTracer::Camera::rotateX(double angle) {
 void RayTracer::Camera::rotateY(double angle) {
     Math::Vector3D toScreen = this->screen_.pos - this->pos_;
 
-    this->rotationY += angle;
+    this->rotation_.y += angle;
     this->screen_.pos -= toScreen;
     toScreen.rotateY(angle);
     this->screen_.pos += toScreen;
@@ -83,7 +85,7 @@ void RayTracer::Camera::rotateY(double angle) {
 void RayTracer::Camera::rotateZ(double angle) {
     Math::Vector3D toScreen = this->screen_.pos - this->pos_;
 
-    this->rotationZ += angle;
+    this->rotation_.z += angle;
     this->screen_.pos -= toScreen;
     toScreen.rotateZ(angle);
     this->screen_.pos += toScreen;
@@ -100,5 +102,31 @@ void RayTracer::Camera::setPosition(const Math::Vector3D &newPos) {
     this->screen_.pos += offset;
 }
 
-void RayTracer::Camera::lookAt(const Math::Vector3D &) {
+void RayTracer::Camera::lookAt(const Math::Vector3D &) {}
+
+void RayTracer::Camera::updatePos(void)
+{
+    if (this->moving_) {
+        Math::Vector3D offset = this->destination_ - this->pos_;
+        Math::Vector3D rotationOffset = this->rotationDestination_ - this->rotation_;
+        if (speed_ == Math::Vector3D(0, 0, 0)) {
+            speed_ = offset / 70;
+            rotationSpeed_ = rotationOffset / 70;
+        }
+        if (offset.length() < 0.06) {
+            this->speed_ = Math::Vector3D(0, 0, 0);
+            this->moving_ = false;
+            return;
+        }
+        this->setPosition(this->pos_ + speed_);
+        this->rotate(rotationSpeed_);
+    }
+}
+
+void RayTracer::Camera::save(libconfig::Setting &parent) const {
+  libconfig::Setting &pos = parent.add("pos", libconfig::Setting::TypeGroup);
+  Math::writeUpVector(pos, this->pos_);
+  libconfig::Setting &rotation =
+      parent.add("rotation", libconfig::Setting::TypeGroup);
+  Math::writeUpVector(rotation, this->rotation_);
 }

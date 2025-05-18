@@ -38,6 +38,10 @@ std::unique_ptr<Material> LambertianDebug::duplicate() {
 AABB::AABB(): material_(std::make_unique<LambertianDebug>(DEBUG_COLOR)) {
 }
 
+AABB::AABB(const AABB &bbox) {
+    this->setBoundingBox(bbox);
+}
+
 AABB::AABB(const Interval &x, const Interval &y, const Interval &z)
     : x(x), y(y), z(z), material_(std::make_unique<LambertianDebug>(DEBUG_COLOR)) {
     padToMinimums();
@@ -55,6 +59,11 @@ AABB::AABB(const AABB &box0, const AABB &box1): material_(std::make_unique<Lambe
     x = Interval(box0.x, box1.x);
     y = Interval(box0.y, box1.y);
     z = Interval(box0.z, box1.z);
+}
+
+AABB &AABB::operator=(const RayTracer::AABB &bbox) {
+    this->setBoundingBox(bbox);
+    return *this;
 }
 
 const Interval &AABB::axisInterval(int n) const {
@@ -186,6 +195,12 @@ void AABB::setPosition(const Math::Vector3D &newPos) {
     ival = Interval(newPos.z, newPos.z);
     ival.expand(this->z.size());
     this->z = ival;
+}
+
+void AABB::setBoundingBox(const AABB &bbox) {
+    this->x = bbox.x;
+    this->y = bbox.y;
+    this->z = bbox.z;
 }
 
 void AABB::setMaterial(std::unique_ptr<Material> &newMaterial) {
